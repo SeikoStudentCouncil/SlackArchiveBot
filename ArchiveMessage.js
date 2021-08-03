@@ -256,7 +256,7 @@ function initQuadraticArray(rowSize, columnSize, arg) {
 }
 
 function deleteSheet() {
-  var name = "1617412794.001100";
+  var name = "";
   var ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   var ss_main = ss.getSheetByName(name);
   ss.deleteSheet(ss_main)
