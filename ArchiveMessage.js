@@ -3,8 +3,6 @@ const CHANNNEL_HISTORY_BASE_URL = "https://slack.com/api/conversations.history";
 
 const USER_INFO_BASE_URL = "https://slack.com/api/users.info";
 
-const USER_CHANNNEL_HISTORY = "https://slack.com/api/users.conversations";
-
 const REPLY_LIST_BASE_URL = "https://slack.com/api/conversations.replies"
 
 var usersInfo = {};
@@ -117,7 +115,11 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
       }
       messageList.push(`【${usersInfo[user]}】\n${text}`);
       var threadURL = getAllReplyInMessage(ss, testChannelID, message.ts, channelSheetURL);
-      channelSheet.getRange(channelSheet.getLastRow() + 1, 1, 1, 5).setValues([[usersInfo[user], text, threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "", message.ts, user]])
+      channelSheet.getRange(channelSheet.getLastRow() + 1, 1, 1, 5).setValues([[
+        usersInfo[user], 
+        text, 
+        threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "", 
+        message.ts, user]])
     }
   }
 }
@@ -178,7 +180,6 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
 function deleteSheets(spreadsheet) {
   var sheetcount = spreadsheet.getNumSheets();
   for (var i = sheetcount; i > 1; i--) {
-    var flag = true;
     var sh = spreadsheet.getSheets()[i - 1];
     spreadsheet.deleteSheet(sh);
   }
@@ -187,7 +188,7 @@ function deleteSheets(spreadsheet) {
 function tests() {
   var ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   var ss_main = ss.getSheetByName("メイン");
-  ss.moveActiveSheet(2);
+  ss_main.moveActiveSheet(2);
 }
 
 function test() {
