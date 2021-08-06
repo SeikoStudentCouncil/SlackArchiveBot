@@ -91,7 +91,12 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
     var messages = res.messages;
     var messageList = [];
     for (var message of messages) {
-      var text = message.text;
+      var files = message.files;
+      var fileUrls = []
+      for (var file of files) {
+        fileUrls.push(file.url_private_download);
+      }
+      var text = message.text + "[fileUrls: " + join(fileUrls, ", ") + "]";
       var user = message.user;
       if (usersInfo[user] == undefined) {
         var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { "user": user });
@@ -144,7 +149,12 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
       return "";
     }
     for (var message of messages) {
-      var text = message.text;
+      var files = message.files;
+      var fileUrls = []
+      for (var file of files) {
+        fileUrls.push(file.url_private_download);
+      }
+      var text = message.text + "[fileUrls: " + join(fileUrls, ", ") + "]";
       var user = message.user;
       if (usersInfo[user] == undefined) {
         var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { "user": user });
