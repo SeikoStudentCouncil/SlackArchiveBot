@@ -282,8 +282,8 @@ function getNewSheetURL(ss, newSheet) {
 }
 
 function cutBlankCells(sh) {
-  sh.deleteRows(sh.getLastRow() + 1, 1000 - sh.getLastRow());
-  sh.deleteColumns(sh.getLastColumn() + 1, 26 - sh.getLastColumn());
+  sh.deleteRows(sh.getLastRow() + 1, sh.getMaxRows() - sh.getLastRow());
+  sh.deleteColumns(sh.getLastColumn() + 1, sh.getMaxColumns() - sh.getLastColumn());
 }
 
 function decorateCells(sh) {
