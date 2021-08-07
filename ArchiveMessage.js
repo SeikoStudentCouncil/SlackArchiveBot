@@ -7,6 +7,11 @@ const REPLY_LIST_BASE_URL = "https://slack.com/api/conversations.replies";
 
 const ATTACHMENTS_FOLDER = DriveApp.getFolderById("1cys1At9ByVNlx6KAOAyO8W28o9ZShC1e");
 
+var properties = PropertiesService.getScriptProperties();
+for (let [key, value] of Object.entries(properties)) {
+  eval(`const ${key} = ${value}`);
+}
+
 var usersInfo = {};
 
 function backUp() {
