@@ -3,7 +3,9 @@ const CHANNNEL_HISTORY_BASE_URL = "https://slack.com/api/conversations.history";
 
 const USER_INFO_BASE_URL = "https://slack.com/api/users.info";
 
-const REPLY_LIST_BASE_URL = "https://slack.com/api/conversations.replies"
+const REPLY_LIST_BASE_URL = "https://slack.com/api/conversations.replies";
+
+const ATTACHMENTS_FOLDER = DriveApp.getFolderById("1cys1At9ByVNlx6KAOAyO8W28o9ZShC1e");
 
 var usersInfo = {};
 
@@ -92,13 +94,17 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
     var messageList = [];
     for (var message of messages) {
       var files = message.files;
-      var fileUrls = []
+      var fileUrls = [];
       if (!(files === undefined)) {
         for (var file of files) {
-          fileUrls.push(file.url_private_download);
+          if (file.mode == 'tombstone' || file.mode == 'hidden_by_limit') {
+            continue;
+          }
+          var fileName = `${testChannelID}_${message.ts}_${file.name}`;
+          fileUrls.push(downloadData(file.url_private_download, fileName));
         }
       }
-      var text = message.text + join(fileUrls, " ");
+      var text = message.text;
       var user = message.user;
       if (usersInfo[user] == undefined) {
         var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { "user": user });
@@ -125,8 +131,11 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
       channelSheet.getRange(channelSheet.getLastRow() + 1, 1, 1, 5).setValues([[
         usersInfo[user], 
         text, 
+        fileUrls.join(", "), 
         threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "", 
-        message.ts, user]])
+        message.ts, 
+        user
+      ]])
     }
   }
 }
@@ -152,13 +161,17 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
     }
     for (var message of messages) {
       var files = message.files;
-      var fileUrls = []
+      var fileUrls = [];
       if (!(files === undefined)) {
         for (var file of files) {
-          fileUrls.push(file.url_private_download);
+          if (file.mode == 'tombstone' || file.mode == 'hidden_by_limit') {
+            continue;
+          }
+          var fileName = `${testChannelID}_${message.ts}_${file.name}`;
+          fileUrls.push(downloadData(file.url_private_download, fileName));
         }
       }
-      var text = message.text + join(fileUrls, " ");
+      var text = message.text;
       var user = message.user;
       if (usersInfo[user] == undefined) {
         var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { "user": user });
@@ -180,7 +193,13 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
         }
         text = text.slice(0, textPoint) + usersInfo[mentionUser] + text.slice(textPoint + 14);
       }
-      messageList.unshift([usersInfo[user], text, message.ts, user]);
+      messageList.unshift([
+        usersInfo[user], 
+        text, 
+        fileUrls.join(", "), 
+        message.ts, 
+        user
+      ]);
     }
   }
   messageList.unshift([`=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`, "", "", ""], ["発言者", "発言内容", "ts", "userID"]);
@@ -225,6 +244,21 @@ function requestToSlackAPI(url, parameters) {
     }
   }
 
+}
+
+function downloadData(url, fileName) {
+  var options = {
+    "headers": { 'Authorization': 'Bearer ' + botToken }
+  };
+  var folder = ATTACHMENTS_FOLDER;
+  var response = UrlFetchApp.fetch(url, options);
+  var fileBlob = response.getBlob().setName(fileName);
+  var itr = folder.getFilesByName(fileName);
+  if (itr.hasNext()) {
+    folder.removeFile(itr.next());
+  }
+  var file = folder.createFile(fileBlob);
+  return file.alternateLink();
 }
 
 function hashToQuery(hashList) {
