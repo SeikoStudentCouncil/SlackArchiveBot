@@ -28,7 +28,7 @@ function backUp() {
       channelInfo.topic,
       `=HYPERLINK("${channelSheetURL}", "リンク＞")`
     ]]);
-    channelSheet.getRange(1, 1, 2, 5).setValues([
+    channelSheet.getRange(1, 1, 2, 7).setValues([
       [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", "", "", ""],
       ["発言者", "発言内容", "スレッドリンク", "添付ファイル", "リアクション", "ts", "userID"]]);
     getAllMessageInChannel(ss, channelId, channelSheet, channelSheetURL);
@@ -56,7 +56,7 @@ function backUpContinue() {
     channelInfo.topic,
     `=HYPERLINK("${channelSheetURL}", "リンク＞")`
     ]]);
-    channelSheet.getRange(1, 1, 2, 5).setValues([
+    channelSheet.getRange(1, 1, 2, 7).setValues([
       [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", "", "", ""],
       ["発言者", "発言内容", "スレッドリンク", "添付ファイル", "リアクション", "ts", "userID"]]);
     getAllMessageInChannel(ss, channelId, channelSheet, channelSheetURL);
@@ -207,7 +207,7 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
   }
   messageList.unshift([`=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`, "", "", "", "", ""], ["発言者", "発言内容", "添付ファイル", "リアクション", "ts", "userID"]);
   var threadSheet = ss.insertSheet(messageTs);
-  threadSheet.getRange(1, 1, messageList.length, 4).setValues(messageList);
+  threadSheet.getRange(1, 1, messageList.length, 6).setValues(messageList);
   decorateCells(threadSheet);
   cutBlankCells(threadSheet);
   return getNewSheetURL(ss, threadSheet);
