@@ -29,8 +29,8 @@ function backUp() {
       `=HYPERLINK("${channelSheetURL}", "リンク＞")`
     ]]);
     channelSheet.getRange(1, 1, 2, 5).setValues([
-      [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", ""], 
-      ["発言者", "発言内容", "スレッドリンク", "ts", "userID"]]);
+      [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", "", "", ""],
+      ["発言者", "発言内容", "スレッドリンク", "添付ファイル", "リアクション", "ts", "userID"]]);
     getAllMessageInChannel(ss, channelId, channelSheet, channelSheetURL);
     decorateCells(channelSheet);
     cutBlankCells(channelSheet);
@@ -57,8 +57,8 @@ function backUpContinue() {
     `=HYPERLINK("${channelSheetURL}", "リンク＞")`
     ]]);
     channelSheet.getRange(1, 1, 2, 5).setValues([
-      [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", ""], 
-      ["発言者", "発言内容", "スレッドリンク", "ts", "userID"]]);
+      [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", "", "", ""],
+      ["発言者", "発言内容", "スレッドリンク", "添付ファイル", "リアクション", "ts", "userID"]]);
     getAllMessageInChannel(ss, channelId, channelSheet, channelSheetURL);
     decorateCells(channelSheet);
     cutBlankCells(channelSheet);
@@ -106,6 +106,7 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
       }
       var text = message.text;
       var user = message.user;
+      var reactions = message.reactions;
       if (usersInfo[user] == undefined) {
         var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { "user": user });
         if (userInfo.user == undefined) continue;
@@ -128,14 +129,14 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
       }
       messageList.push(`【${usersInfo[user]}】\n${text}`);
       var threadURL = getAllReplyInMessage(ss, testChannelID, message.ts, channelSheetURL);
-      channelSheet.getRange(channelSheet.getLastRow() + 1, 1, 1, 5).setValues([[
-        usersInfo[user], 
-        text, 
-        fileUrls.join(", "), 
-        threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "", 
-        message.ts, 
-        user
-      ]])
+      channelSheet.getRange(channelSheet.getLastRow() + 1, 1, 1, 7).setValues([[
+        usersInfo[user],
+        text,
+        threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "",
+        fileUrls.join(", "),
+        `{ "reactions": ${json.stringify(reactions)} }`,
+        message.ts,
+        user]])
     }
   }
 }
@@ -173,6 +174,7 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
       }
       var text = message.text;
       var user = message.user;
+      var reactions = message.reactions;
       if (usersInfo[user] == undefined) {
         var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { "user": user });
         if (userInfo.user == undefined) continue;
@@ -194,15 +196,16 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
         text = text.slice(0, textPoint) + usersInfo[mentionUser] + text.slice(textPoint + 14);
       }
       messageList.unshift([
-        usersInfo[user], 
-        text, 
-        fileUrls.join(", "), 
-        message.ts, 
+        usersInfo[user],
+        text,
+        fileUrls.join(", "),
+        `{ "reactions": ${json.stringify(reactions)} }`,
+        message.ts,
         user
       ]);
     }
   }
-  messageList.unshift([`=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`, "", "", ""], ["発言者", "発言内容", "ts", "userID"]);
+  messageList.unshift([`=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`, "", "", "", "", ""], ["発言者", "発言内容", "添付ファイル", "リアクション", "ts", "userID"]);
   var threadSheet = ss.insertSheet(messageTs);
   threadSheet.getRange(1, 1, messageList.length, 4).setValues(messageList);
   decorateCells(threadSheet);
