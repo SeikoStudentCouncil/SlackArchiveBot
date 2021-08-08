@@ -256,7 +256,7 @@ function requestToSlackAPI(url, parameters) {
 
 function downloadData(url, fileName) {
   var options = {
-    "headers": { 'Authorization': 'Bearer ' + botToken }
+    "headers": { 'Authorization': 'Bearer ' + CHANNNEL_ADMIN_AUTH_TOKEN }
   };
   var folder = ATTACHMENTS_FOLDER;
   var response = UrlFetchApp.fetch(url, options);
