@@ -73,7 +73,7 @@ function backUpContinue() {
 
 function getAllChannels() {
   var res = requestToSlackAPI(CHANNNEL_LIST_BASE_URL, { "limit": 100, "types": "public_channel, private_channel" });
-  //console.log(res);
+  console.log(res);
   var channelsList = [];
   if (!res.ok) return;
   var channels = res.channels;
@@ -97,6 +97,7 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
     var messages = res.messages;
     var messageList = [];
     for (var message of messages) {
+      console.log(message)
       var files = message.files;
       var fileUrls = [];
       if (!(files === undefined)) {
@@ -138,7 +139,7 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
         text,
         threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "",
         fileUrls.join(", "),
-        `{ "reactions": ${json.stringify(reactions)} }`,
+        (reactions != undefined)? `{ "reactions": ${JSON.stringify(reactions)} }` : "",
         message.ts,
         user]])
     }
@@ -203,7 +204,7 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
         usersInfo[user],
         text,
         fileUrls.join(", "),
-        `{ "reactions": ${json.stringify(reactions)} }`,
+        (reactions != undefined)? `{ "reactions": ${JSON.stringify(reactions)} }` : "",
         message.ts,
         user
       ]);
@@ -232,7 +233,7 @@ function tests() {
 }
 
 function test() {
-  console.log(getAllChannels().slice(74));
+  console.log(getAllChannels().slice(0));
 }
 
 function requestToSlackAPI(url, parameters) {
@@ -281,8 +282,8 @@ function getNewSheetURL(ss, newSheet) {
 }
 
 function cutBlankCells(sh) {
-  sh.deleteRows(sh.getLastRow() + 1, sh.getMaxRows() - sh.getLastRow());
-  sh.deleteColumns(sh.getLastColumn() + 1, sh.getMaxColumns() - sh.getLastColumn());
+  sh.deleteRows(sh.getLastRow() + 1, sh.getMaxRows() - sh.getLastRow() - 1);
+  sh.deleteColumns(sh.getLastColumn() + 1, sh.getMaxColumns() - sh.getLastColumn() - 1);
 }
 
 function decorateCells(sh) {
