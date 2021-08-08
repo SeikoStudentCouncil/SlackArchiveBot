@@ -263,7 +263,7 @@ function downloadData(url, fileName) {
   var fileBlob = response.getBlob().setName(fileName);
   var itr = folder.getFilesByName(fileName);
   if (itr.hasNext()) {
-    folder.removeFile(itr.next());
+    itr.next().setTrashed(true);
   }
   var file = folder.createFile(fileBlob);
   return file.alternateLink();
