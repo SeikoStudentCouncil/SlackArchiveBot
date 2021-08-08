@@ -130,7 +130,7 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
           var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { "user": mentionUser });
           usersInfo[mentionUser] = (userInfo.user.profile.display_name == "") ? userInfo.user.real_name : userInfo.user.profile.display_name;
         }
-        text = text.slice(0, textPoint) + usersInfo[mentionUser] + text.slice(textPoint + 14);
+        text = text.slice(0, textPoint) + `@${usersInfo[mentionUser]}` + text.slice(textPoint + 14);
       }
       messageList.push(`【${usersInfo[user]}】\n${text}`);
       var threadURL = getAllReplyInMessage(ss, testChannelID, message.ts, channelSheetURL);
