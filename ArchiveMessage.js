@@ -174,7 +174,10 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
             continue;
           }
           var fileName = `${testChannelID}_${message.ts}_${file.name}`;
-          fileUrls.push(downloadData(file.url_private_download, fileName));
+          var url = file.url_private_download;
+          if (url != '') {
+            fileUrls.push(downloadData(url, fileName));
+          }
         }
       }
       var text = message.text;
