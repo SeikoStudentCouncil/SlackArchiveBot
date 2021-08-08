@@ -291,12 +291,14 @@ function decorateCells(sh) {
   var columnNum = sh.getLastColumn();
   var allCells = sh.getRange(1, 1, rowNum, columnNum);
   allCells.setVerticalAlignments(initQuadraticArray(rowNum, columnNum, "middle"));
-  allCells.setWraps(initQuadraticArray(rowNum, columnNum, true));
+  allCells.setWraps(initQuadraticArray(rowNum, columnNum, false));
   sh.setColumnWidth(1, 230);
   sh.setColumnWidth(2, 1050);
   sh.setColumnWidth(3, 90);
   sh.setColumnWidth(4, 130);
   sh.setColumnWidth(5, 130);
+  sh.setColumnWidth(6, 130);
+  sh.setColumnWidth(7, 130);
   sh.setFrozenRows(2);
 }
 
