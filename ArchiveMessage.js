@@ -266,7 +266,7 @@ function downloadData(url, fileName) {
     itr.next().setTrashed(true);
   }
   var file = folder.createFile(fileBlob);
-  return file.alternateLink();
+  return file.alternateLink;
 }
 
 function hashToQuery(hashList) {
