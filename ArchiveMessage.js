@@ -175,7 +175,7 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
           }
           var fileName = `${testChannelID}_${message.ts}_${file.name}`;
           var url = file.url_private_download;
-          if (url != '') {
+          if (url) {
             fileUrls.push(downloadData(url, fileName));
           }
         }
