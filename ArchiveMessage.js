@@ -46,12 +46,12 @@ function backUp() {
 }
 
 function backUpContinue() {
-  var index = 7;
+  var channelIndex = 7;
   var ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   var ss_main = ss.getSheetByName("メイン");
   var ss_mainURL = getNewSheetURL(ss, ss_main);
   var channelsList = getAllChannels();
-  for (var channelInfo of channelsList.slice(index)) {
+  for (var channelInfo of channelsList.slice(channelIndex)) {
     var channelId = channelInfo.id,
       channelName = channelInfo.name;
     var oldSheet = ss.getSheetByName(channelName)
@@ -60,7 +60,7 @@ function backUpContinue() {
     }
     var channelSheet = ss.insertSheet(channelName);
     var channelSheetURL = getNewSheetURL(ss, channelSheet);
-    ss_main.getRange(ss_main.getLastRow(), 1, 1, 5).setValues([[ // backUp()で失敗したchannelから
+    ss_main.getRange(channelIndex + 2, 1, 1, 5).setValues([[ // backUp()で失敗したchannelから
       channelInfo.isPrivate ? "" : "〇",
       channelId,
       channelName,
