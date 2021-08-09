@@ -272,7 +272,8 @@ function downloadData(url, fileName) {
     itr.next().setTrashed(true);
   }
   var file = folder.createFile(fileBlob);
-  return file.alternateLink;
+  var driveFile = DriveApp.getFileById(file.getId());
+  return driveFile.alternateLink;
 }
 
 function hashToQuery(hashList) {
