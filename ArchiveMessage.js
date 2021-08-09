@@ -244,10 +244,9 @@ function test() {
 
 function requestToSlackAPI(url, parameters) {
   while (true) {
-    parameters["token"] = CHANNNEL_ADMIN_AUTH_TOKEN;
     var response = UrlFetchApp.fetch(`${url}?${hashToQuery(parameters)}`, {
       method: 'GET',
-      headers: { "Content-Type": 'application/x-www-form-urlencoded' },
+      headers: { "Content-Type": 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + CHANNNEL_ADMIN_AUTH_TOKEN },
       muteHttpExceptions: true
     });
     var response_code = response.getResponseCode();
@@ -257,7 +256,6 @@ function requestToSlackAPI(url, parameters) {
       Utilities.sleep(10000);
     }
   }
-
 }
 
 function downloadData(url, fileName) {
