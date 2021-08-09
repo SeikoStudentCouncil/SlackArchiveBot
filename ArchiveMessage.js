@@ -74,7 +74,7 @@ function backUpContinue() {
     decorateCells(channelSheet);
     cutBlankCells(channelSheet);
     console.log(`done: ${channelIndex} ${channelName}`);
-    index++;
+    channelIndex++;
   }
   console.log(`everything done!`);
 }
