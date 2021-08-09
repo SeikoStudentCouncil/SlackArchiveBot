@@ -20,6 +20,7 @@ function backUp() {
   var ss_mainURL = getNewSheetURL(ss, ss_main);
   ss_main.getRange(1, 1, 1, 5).setValues([["パブリック", "チャンネルID", "チャンネル名", "トピック", "リンク"]]);
   var channelsList = getAllChannels();
+  var channelNum = 0;
   for (var channelInfo of channelsList) {
     var channelId = channelInfo.id,
       channelName = channelInfo.name;
@@ -38,27 +39,30 @@ function backUp() {
     getAllMessageInChannel(ss, channelId, channelSheet, channelSheetURL);
     decorateCells(channelSheet);
     cutBlankCells(channelSheet);
-    console.log(`done: ${channelName}`);
+    console.log(`done: ${channelNum} ${channelName}`);
+    channelNum++;
   }
   console.log(`everything done!`);
 }
 
 function backUpContinue() {
-  var firstIndex = 74;
+  var index = 74;
   var ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   var ss_main = ss.getSheetByName("メイン");
   var ss_mainURL = getNewSheetURL(ss, ss_main);
   var channelsList = getAllChannels();
-  for (var channelInfo of channelsList.slice(firstIndex)) {
+  for (var channelInfo of channelsList.slice(index)) {
     var channelId = channelInfo.id,
       channelName = channelInfo.name;
+    ss.deleteSheet(ss.getSheetByName(channelName));
     var channelSheet = ss.insertSheet(channelName);
     var channelSheetURL = getNewSheetURL(ss, channelSheet);
-    ss_main.getRange(ss_main.getLastRow() + 1, 1, 1, 5).setValues([[channelInfo.isPrivate ? "" : "〇",
+    ss_main.getRange(ss_main.getLastRow(), 1, 1, 5).setValues([[ // backUp()で失敗したchannelから
+      channelInfo.isPrivate ? "" : "〇",
       channelId,
       channelName,
-    channelInfo.topic,
-    `=HYPERLINK("${channelSheetURL}", "リンク＞")`
+      channelInfo.topic,
+      `=HYPERLINK("${channelSheetURL}", "リンク＞")`
     ]]);
     channelSheet.getRange(1, 1, 2, 7).setValues([
       [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", "", "", ""],
@@ -66,7 +70,8 @@ function backUpContinue() {
     getAllMessageInChannel(ss, channelId, channelSheet, channelSheetURL);
     decorateCells(channelSheet);
     cutBlankCells(channelSheet);
-    console.log(`done: ${channelName}`);
+    console.log(`done: ${index} ${channelName}`);
+    index++;
   }
   console.log(`everything done!`);
 }
@@ -222,6 +227,7 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
     }
   }
   messageList.unshift([`=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`, "", "", "", "", ""], ["発言者", "発言内容", "添付ファイル", "リアクション", "ts", "userID"]);
+  ss.deleteSheet(ss.getSheetByName(messageTs));
   var threadSheet = ss.insertSheet(messageTs);
   threadSheet.getRange(1, 1, messageList.length, 6).setValues(messageList);
   decorateCells(threadSheet);
