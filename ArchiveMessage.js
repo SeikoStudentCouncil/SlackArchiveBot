@@ -230,7 +230,7 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
     }
   }
   messageList.unshift([`=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`, "", "", "", "", ""], ["発言者", "発言内容", "添付ファイル", "リアクション", "ts", "userID"]);
-  var oldSheet = ss.getSheetByName(threadTs)
+  var oldSheet = ss.getSheetByName(messageTs)
   if (oldSheet) {
     ss.deleteSheet(oldSheet);
   }
