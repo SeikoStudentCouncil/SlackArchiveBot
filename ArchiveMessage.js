@@ -73,7 +73,7 @@ function backUpContinue() {
     getAllMessageInChannel(ss, channelId, channelSheet, channelSheetURL);
     decorateCells(channelSheet);
     cutBlankCells(channelSheet);
-    console.log(`done: ${index} ${channelName}`);
+    console.log(`done: ${channelIndex} ${channelName}`);
     index++;
   }
   console.log(`everything done!`);
