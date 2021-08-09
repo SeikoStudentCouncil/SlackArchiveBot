@@ -271,7 +271,7 @@ function downloadData(url, fileName) {
   }
   var file = folder.createFile(fileBlob);
   var driveFile = DriveApp.getFileById(file.getId());
-  return driveFile.alternateLink;
+  return driveFile.getUrl();
 }
 
 function hashToQuery(hashList) {
