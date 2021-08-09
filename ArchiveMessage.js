@@ -46,7 +46,7 @@ function backUp() {
 }
 
 function backUpContinue() {
-  var index = 74;
+  var index = 7;
   var ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   var ss_main = ss.getSheetByName("メイン");
   var ss_mainURL = getNewSheetURL(ss, ss_main);
@@ -54,7 +54,10 @@ function backUpContinue() {
   for (var channelInfo of channelsList.slice(index)) {
     var channelId = channelInfo.id,
       channelName = channelInfo.name;
-    ss.deleteSheet(ss.getSheetByName(channelName));
+    var oldSheet = ss.getSheetByName(channelName)
+    if (oldSheet) {
+      ss.deleteSheet(oldSheet);
+    }
     var channelSheet = ss.insertSheet(channelName);
     var channelSheetURL = getNewSheetURL(ss, channelSheet);
     ss_main.getRange(ss_main.getLastRow(), 1, 1, 5).setValues([[ // backUp()で失敗したchannelから
@@ -227,7 +230,10 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
     }
   }
   messageList.unshift([`=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`, "", "", "", "", ""], ["発言者", "発言内容", "添付ファイル", "リアクション", "ts", "userID"]);
-  ss.deleteSheet(ss.getSheetByName(messageTs));
+  var oldSheet = ss.getSheetByName(threadTs)
+  if (oldSheet) {
+    ss.deleteSheet(oldSheet);
+  }
   var threadSheet = ss.insertSheet(messageTs);
   threadSheet.getRange(1, 1, messageList.length, 6).setValues(messageList);
   decorateCells(threadSheet);
