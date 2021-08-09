@@ -29,4 +29,4 @@ jobs:
           echo \{\"scriptId\":\"${{ secrets.SCRIPTID }}\"\} > .clasp.json
       - name: Deploy
         run: |
-          clasp push
+          clasp push --force
