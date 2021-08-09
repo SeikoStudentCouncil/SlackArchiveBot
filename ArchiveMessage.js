@@ -274,15 +274,19 @@ function downloadData(url, fileName) {
     "headers": { 'Authorization': 'Bearer ' + CHANNNEL_ADMIN_AUTH_TOKEN }
   };
   var folder = ATTACHMENTS_FOLDER;
-  var response = UrlFetchApp.fetch(url, options);
-  var fileBlob = response.getBlob().setName(fileName);
-  var itr = folder.getFilesByName(fileName);
-  if (itr.hasNext()) {
-    itr.next().setTrashed(true);
+  try {
+    var response = UrlFetchApp.fetch(url, options);
+    var fileBlob = response.getBlob().setName(fileName);
+    var itr = folder.getFilesByName(fileName);
+    if (itr.hasNext()) {
+      itr.next().setTrashed(true);
+    }
+    var file = folder.createFile(fileBlob);
+    var driveFile = DriveApp.getFileById(file.getId());
+    return driveFile.getUrl();
+  } catch (error) {
+    return error.lineNumber + error.message + error.stack;
   }
-  var file = folder.createFile(fileBlob);
-  var driveFile = DriveApp.getFileById(file.getId());
-  return driveFile.getUrl();
 }
 
 function hashToQuery(hashList) {
