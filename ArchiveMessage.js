@@ -81,6 +81,11 @@ function getAllChannels() {
     if (channel.is_archived) continue; // アーカイブされたものの除外
     channelsList.push({ "name": channel.name, "id": channel.id, "isPrivate": channel.is_private, "topic": channel.topic.value });
   }
+  channelsList.sort(function (a, b) {
+    if (a.name < b.name) return -1;
+    if (a.name > b.name) return 1;
+    return 0;
+  });
   return channelsList;
 }
 
