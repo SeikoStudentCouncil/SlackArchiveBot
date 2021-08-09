@@ -176,7 +176,7 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
           if (file.mode == 'tombstone' || file.mode == 'hidden_by_limit') {
             continue;
           }
-          var fileName = `${testChannelID}_${message.ts}_${file.name}`;
+          var fileName = `${channelID}_${message.ts}_${file.name}`;
           var url = file.url_private_download;
           if (url) {
             fileUrls.push(downloadData(url, fileName));
