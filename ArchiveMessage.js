@@ -155,7 +155,7 @@ function getAllMessageInChannel(ss, testChannelID, channelSheet, channelSheetURL
         text,
         threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "",
         fileUrls.join(", "),
-        (reactions != undefined)? `{ "reactions": ${JSON.stringify(reactions)} }` : "",
+        (reactions != undefined) ? `{ "reactions": ${JSON.stringify(reactions)} }` : "",
         message.ts,
         user]])
     }
@@ -223,7 +223,7 @@ function getAllReplyInMessage(ss, channelID, messageTs, channelSheetURL) {
         usersInfo[user],
         text,
         fileUrls.join(", "),
-        (reactions != undefined)? `{ "reactions": ${JSON.stringify(reactions)} }` : "",
+        (reactions != undefined) ? `{ "reactions": ${JSON.stringify(reactions)} }` : "",
         message.ts,
         user
       ]);
@@ -288,8 +288,8 @@ function downloadData(url, fileName) {
       itr.next().setTrashed(true);
     }
     var file = folder.createFile(fileBlob);
-    var driveFile = DriveApp.getFileById(file.getId());
-    return driveFile.getUrl();
+    // var driveFile = DriveApp.getFileById(file.getId());
+    return file.getUrl();
   } catch (error) {
     return error.lineNumber + error.message + error.stack;
   }
