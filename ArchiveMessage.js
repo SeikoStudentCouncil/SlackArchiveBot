@@ -7,35 +7,47 @@ const REPLY_LIST_BASE_URL = "https://slack.com/api/conversations.replies";
 
 const ATTACHMENTS_FOLDER = DriveApp.getFolderById("1cys1At9ByVNlx6KAOAyO8W28o9ZShC1e");
 
-var properties = PropertiesService.getScriptProperties();
+const properties = PropertiesService.getScriptProperties();
 const CHANNNEL_ADMIN_AUTH_TOKEN = properties.getProperty("CHANNNEL_ADMIN_AUTH_TOKEN");
 const BACKUP_SHEET_ID = properties.getProperty("BACKUP_SHEET_ID");
-const SLASH_COMMAND_SHEET_ID = properties.getProperty("SLASH_COMMAND_SHEET_ID");
+const VERIFICATION_TOKEN = properties.getProperty("VERIFICATION_TOKEN");
 
 var usersInfo = {};
 function doPost(e) {
-  const log = JSON.stringify(e.parameters, undefined, 4);
-  const ss = SpreadsheetApp.openById(SLASH_COMMAND_SHEET_ID);
-  const logsheet = ss.getSheetByName("result");
-  const channelID = e.parameters.channel_id;
-  const channelName = e.parameters.channel_name;
-  if (!logsheet) {
-    return;
-  }
-  logsheet.insertRows(2, 1);
+  if (e.parameters.token == VERIFICATION_TOKEN) {
+    const log = JSON.stringify(e.parameters, undefined, 4);
+    const slashCommandSheetId = e.parameters.text;
+    const ss = SpreadsheetApp.openById(slashCommandSheetId);
+    const logsheet = ss.getSheetByName("result");
+    const channelID = e.parameters.channel_id;
+    const channelName = e.parameters.channel_name;
 
-  const date = new Date();
-  const values = [
-    [
-      Utilities.formatDate(date, "JST", "yyyy/MM/dd (E) HH:mm:ss Z"),
-      log,
-      "",
-      "",
-    ],
-  ];
-  logsheet.getRange(2, 1, 1, 4).setValues(values);
-  const sheet = ss.insertSheet(channelName);
-  getAllMessageInChannel(ss, channelID, sheet, getNewSheetURL(sheet));
+    if (!logsheet) {
+      return;
+    }
+    logsheet.insertRows(2, 1);
+
+    const date = new Date();
+    const values = [
+      [
+        Utilities.formatDate(date, "JST", "yyyy/MM/dd (E) HH:mm:ss Z"),
+        log,
+        "",
+        "",
+      ],
+    ];
+    logsheet.getRange(2, 1, 1, 4).setValues(values);
+    const sheet = ss.insertSheet(channelName);
+    getAllMessageInChannel(ss, channelID, sheet, getNewSheetURL(sheet));
+    logReturn("done!");
+  } else {
+    logReturn("ERR: invaild token");
+  }
+}
+
+function logReturn(log) {
+  const response = { text: log };
+  return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(ContentService.MimeType.JSON);
 }
 
 function backUp() {
