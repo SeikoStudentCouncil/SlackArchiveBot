@@ -13,6 +13,21 @@ const BACKUP_SHEET_ID = properties.getProperty("BACKUP_SHEET_ID");
 
 var usersInfo = {};
 
+function updateArchives() {
+  var ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
+  var ss_main = ss.getSheetByName("メイン");
+  var ss_mainURL = getNewSheetURL(ss, ss_main);
+  var channelList = getAllChannels();
+  var oldChannelList = ss.getRange('B2:C').filter(v => v[0]);
+  let i = 0, j = 0;
+  while (i < channelList.length) {
+    if (channelList[i].id != oldChannelList[j][0]) {
+      
+    }
+  }
+}
+
+
 function backUp() {
   var ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   deleteSheets(ss);
