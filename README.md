@@ -1,8 +1,11 @@
 # SlackArchiveBot
 Slack Message Archiver.
 
-## setup
+## setup on gas
 Set properties of `CHANNNEL_ADMIN_AUTH_TOKEN` and `BACKUP_SHEET_ID` on GAS.
+
+## setup on local
+exec `npm i` on local developing environment to install `@types/google-apps-script`.
 
 ## note
 第62回聖光祭実行委員会技術部門において拡大実行会議 Slack メッセージアーカイブに用いたプログラムならびにデータを、 第62回聖光祭実行委員会情報公開規則第一条および第六条の規定に基づき公開します。
