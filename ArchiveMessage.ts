@@ -15,7 +15,21 @@ const CHANNNEL_ADMIN_AUTH_TOKEN = properties.getProperty(
 );
 const BACKUP_SHEET_ID = properties.getProperty("BACKUP_SHEET_ID");
 
-interface Channel {
+interface SlackFile {
+  name: string;
+  mode: string;
+  url_private_download: string;
+}
+
+interface SlackMessage {
+  text: string;
+  files?: SlackFile[] | undefined;
+  user: any;
+  ts: string;
+  reactions: any;
+}
+
+interface SlackChannel {
   name: string;
   id: string;
   isPrivate: boolean;
@@ -37,14 +51,108 @@ function updateArchives() {
   );
   for (const channel of channelList) {
     if (oldChannelList.has(channel.id)) continue;
-    createChannelSheet(ss,ss_main,channel)
+    createChannelSheet(ss, ss_main, channel);
+  }
+}
+
+function UpdateMessageInChannel(
+  ss: GoogleAppsScript.Spreadsheet.Spreadsheet,
+  testChannelID: string,
+  channelSheet: GoogleAppsScript.Spreadsheet.Sheet,
+  channelSheetURL: string
+) {
+  const latest=Number(channelSheet.getRange("F3").getValue());
+  var hasMore = true;
+  var option = { channel: testChannelID, limit: 3000 ,oldest:latest};
+  while (hasMore) {
+    var res = requestToSlackAPI(CHANNNEL_HISTORY_BASE_URL, option);
+    if (!res.ok) return;
+    hasMore = res.has_more;
+    if (hasMore) {
+      option["cursor"] = res.response_metadata.next_cursor;
+    }
+    var messages: SlackMessage[] = res.messages;
+    var messageList:string[] = [];
+    for (var message of messages) {
+      console.log(message);
+      var files = message.files;
+      var fileUrls = [];
+      if (!(files === undefined)) {
+        for (var file of files) {
+          if (file.mode == "tombstone" || file.mode == "hidden_by_limit") {
+            continue;
+          }
+          var fileName = `${testChannelID}_${message.ts}_${file.name}`;
+          var url = file.url_private_download;
+          if (url) {
+            fileUrls.push(downloadData(url, fileName));
+          }
+        }
+      }
+      var text = message.text;
+      var user = message.user;
+      var reactions = message.reactions;
+      if (usersInfo[user] == undefined) {
+        var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { user: user });
+        if (userInfo.user == undefined) continue;
+        usersInfo[user] =
+          userInfo.user.profile.display_name == ""
+            ? userInfo.user.real_name
+            : userInfo.user.profile.display_name;
+      }
+      var flag = true;
+      while (flag) {
+        var textPoint = text.search(/<@U.{10}>/);
+        // console.log(textPoint);
+        if (textPoint == -1) {
+          flag = false;
+          continue;
+        }
+        var mentionUser = text.slice(textPoint + 2, textPoint + 13);
+        if (usersInfo[mentionUser] == undefined) {
+          var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, {
+            user: mentionUser,
+          });
+          usersInfo[mentionUser] =
+            userInfo.user.profile.display_name == ""
+              ? userInfo.user.real_name
+              : userInfo.user.profile.display_name;
+        }
+        text =
+          text.slice(0, textPoint) +
+          `@${usersInfo[mentionUser]}` +
+          text.slice(textPoint + 14);
+      }
+      messageList.push(`【${usersInfo[user]}】\n${text}`);
+      var threadURL = getAllReplyInMessage(
+        ss,
+        testChannelID,
+        message.ts,
+        channelSheetURL
+      );
+      channelSheet
+        .getRange(channelSheet.getLastRow() + 1, 1, 1, 7)
+        .setValues([
+          [
+            usersInfo[user],
+            text,
+            threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "",
+            fileUrls.join(", "),
+            reactions != undefined
+              ? `{ "reactions": ${JSON.stringify(reactions)} }`
+              : "",
+            message.ts,
+            user,
+          ],
+        ]);
+    }
   }
 }
 
 function createChannelSheet(
   ss: GoogleAppsScript.Spreadsheet.Spreadsheet,
   ss_main: GoogleAppsScript.Spreadsheet.Sheet,
-  channel: Channel
+  channel: SlackChannel
 ) {
   const channelSheet = ss.insertSheet(channel.name);
   const channelSheetURL = getNewSheetURL(ss, channelSheet);
@@ -178,7 +286,7 @@ function getAllChannels() {
     types: "public_channel, private_channel",
   });
   console.log(res);
-  var channelsList: Channel[] = [];
+  var channelsList: SlackChannel[] = [];
   if (!res.ok) return;
   var channels = res.channels;
   for (var channel of channels) {
