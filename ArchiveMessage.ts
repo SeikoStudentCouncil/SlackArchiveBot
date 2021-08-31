@@ -24,7 +24,7 @@ interface SlackFile {
 interface SlackMessage {
   text: string;
   files?: SlackFile[] | undefined;
-  user: any;
+  user: string;
   ts: string;
   reactions: any;
 }
@@ -53,6 +53,136 @@ function updateArchives() {
     if (oldChannelList.has(channel.id)) continue;
     createChannelSheet(ss, ss_main, channel);
   }
+  const sheets = ss.getSheets();
+  for (const sheet of sheets) {
+    const [identifier, channelid] = sheet.getRange("A1:B1").getValues()[0] as [
+      string,
+      string
+    ];
+    if (identifier === "＜メインへ戻る") {
+      // if channel
+      UpdateMessageInChannel(ss, channelid, sheet, getNewSheetURL(ss, sheet));
+    }
+    if (identifier === "＜親チャンネルへ") {
+      // if thread
+      UpdateAllReplyInMessage(ss, sheet, channelid);
+    }
+  }
+}
+
+function UpdateAllReplyInMessage(
+  ss: GoogleAppsScript.Spreadsheet.Spreadsheet,
+  threadSheet: GoogleAppsScript.Spreadsheet.Sheet,
+  channelID: string
+) {
+  const latest = threadSheet.getRange("E3").getValue();
+  var hasMore = true;
+  var messageList: string[][] = [];
+  var option = {
+    channel: channelID,
+    ts: threadSheet.getName(),
+    limit: 100,
+    oldest: latest,
+  };
+  while (hasMore) {
+    var res = requestToSlackAPI(REPLY_LIST_BASE_URL, option);
+    if (!res.ok) {
+      console.log(res.error);
+      return "";
+    }
+
+    hasMore = res.has_more;
+    if (hasMore) {
+      option["cursor"] = res.response_metadata.next_cursor;
+    }
+    var messages: SlackMessage[] = res.messages;
+    /* if (messages[0].reply_count == undefined) {
+      return "";
+    } */
+    for (var message of messages) {
+      var files = message.files;
+      var fileUrls = [];
+      if (!(files === undefined)) {
+        for (var file of files) {
+          if (file.mode == "tombstone" || file.mode == "hidden_by_limit") {
+            continue;
+          }
+          var fileName = `${channelID}_${message.ts}_${file.name}`;
+          var url = file.url_private_download;
+          if (url) {
+            fileUrls.push(downloadData(url, fileName));
+          }
+        }
+      }
+      var text = message.text;
+      var user = message.user;
+      var reactions = message.reactions;
+      if (usersInfo[user] == undefined) {
+        var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { user: user });
+        if (userInfo.user == undefined) continue;
+        usersInfo[user] =
+          userInfo.user.profile.display_name == ""
+            ? userInfo.user.real_name
+            : userInfo.user.profile.display_name;
+      }
+      var flag = true;
+      while (flag) {
+        var textPoint = text.search(/<@U.{10}>/);
+        // console.log(textPoint);
+        if (textPoint == -1) {
+          flag = false;
+          continue;
+        }
+        var mentionUser = text.slice(textPoint + 2, textPoint + 13);
+        if (usersInfo[mentionUser] == undefined) {
+          var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, {
+            user: mentionUser,
+          });
+          usersInfo[mentionUser] =
+            userInfo.user.profile.display_name == ""
+              ? userInfo.user.real_name
+              : userInfo.user.profile.display_name;
+        }
+        text =
+          text.slice(0, textPoint) +
+          `@${usersInfo[mentionUser]}` +
+          text.slice(textPoint + 14);
+      }
+      messageList.unshift([
+        usersInfo[user],
+        text,
+        fileUrls.join(", "),
+        reactions != undefined
+          ? `{ "reactions": ${JSON.stringify(reactions)} }`
+          : "",
+        message.ts,
+        user,
+      ]);
+    }
+  }
+  /* messageList.unshift(
+    [
+      `=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`,
+      channelID,
+      "",
+      "",
+      "",
+      "",
+    ],
+    ["発言者", "発言内容", "添付ファイル", "リアクション", "ts", "userID"]
+  ); */
+
+  // もっとSDGsに貢献しよう　限られた計算資源を有効に！w
+  /*   var oldSheet = ss.getSheetByName(messageTs);
+  if (oldSheet) {
+    ss.deleteSheet(oldSheet);
+  } */
+  // var threadSheet = ss.insertSheet(messageTs);
+  threadSheet.insertRows(3, messageList.length);
+  threadSheet.getRange(3, 1, 3 + messageList.length, 6).setValues(messageList);
+  decorateCells(threadSheet);
+  cutBlankCells(threadSheet);
+  return getNewSheetURL(ss, threadSheet);
 }
 
 function UpdateMessageInChannel(
@@ -61,9 +191,9 @@ function UpdateMessageInChannel(
   channelSheet: GoogleAppsScript.Spreadsheet.Sheet,
   channelSheetURL: string
 ) {
-  const latest=Number(channelSheet.getRange("F3").getValue());
+  const latest: string = channelSheet.getRange("F3").getValue();
   var hasMore = true;
-  var option = { channel: testChannelID, limit: 3000 ,oldest:latest};
+  var option = { channel: testChannelID, limit: 3000, oldest: latest };
   while (hasMore) {
     var res = requestToSlackAPI(CHANNNEL_HISTORY_BASE_URL, option);
     if (!res.ok) return;
@@ -72,7 +202,7 @@ function UpdateMessageInChannel(
       option["cursor"] = res.response_metadata.next_cursor;
     }
     var messages: SlackMessage[] = res.messages;
-    var messageList:string[] = [];
+    var messageList: string[] = [];
     for (var message of messages) {
       console.log(message);
       var files = message.files;
@@ -169,7 +299,15 @@ function createChannelSheet(
       ],
     ]);
   channelSheet.getRange(1, 1, 2, 7).setValues([
-    [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", "", "", ""],
+    [
+      `=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`,
+      channel.id,
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
     [
       "発言者",
       "発言内容",
@@ -214,7 +352,15 @@ function backUp() {
         ],
       ]);
     channelSheet.getRange(1, 1, 2, 7).setValues([
-      [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", "", "", ""],
+      [
+        `=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`,
+        channelId,
+        "",
+        "",
+        "",
+        "",
+        "",
+      ],
       [
         "発言者",
         "発言内容",
@@ -260,7 +406,15 @@ function backUpContinue() {
       ],
     ]);
     channelSheet.getRange(1, 1, 2, 7).setValues([
-      [`=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`, "", "", "", "", "", ""],
+      [
+        `=HYPERLINK("${ss_mainURL}", "＜メインへ戻る")`,
+        channelId,
+        "",
+        "",
+        "",
+        "",
+        "",
+      ],
       [
         "発言者",
         "発言内容",
@@ -402,7 +556,7 @@ function getAllMessageInChannel(
 function getAllReplyInMessage(
   ss: GoogleAppsScript.Spreadsheet.Spreadsheet,
   channelID: string,
-  messageTs: any,
+  messageTs: string,
   channelSheetURL: string
 ) {
   var hasMore = true;
@@ -487,7 +641,7 @@ function getAllReplyInMessage(
   messageList.unshift(
     [
       `=HYPERLINK("${channelSheetURL}", "＜親チャンネルへ")`,
-      "",
+      channelID,
       "",
       "",
       "",
