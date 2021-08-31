@@ -9,11 +9,52 @@ const ATTACHMENTS_FOLDER = DriveApp.getFolderById(
   "1cys1At9ByVNlx6KAOAyO8W28o9ZShC1e"
 );
 
-var properties = PropertiesService.getScriptProperties();
+const properties = PropertiesService.getScriptProperties();
 const CHANNNEL_ADMIN_AUTH_TOKEN = properties.getProperty(
   "CHANNNEL_ADMIN_AUTH_TOKEN"
 );
 const BACKUP_SHEET_ID = properties.getProperty("BACKUP_SHEET_ID");
+const VERIFICATION_TOKEN = properties.getProperty("VERIFICATION_TOKEN");
+
+var usersInfo = {};
+function doPost(e: GoogleAppsScript.Events.DoPost) {
+  if (e.parameter.token === VERIFICATION_TOKEN) {
+    const log = JSON.stringify(e.parameter, undefined, 4);
+    const slashCommandSheetId = e.parameter.text;
+    const ss = SpreadsheetApp.openById(slashCommandSheetId);
+    const logsheet = ss.getSheetByName("result");
+    const channelID = e.parameter.channel_id;
+    const channelName = e.parameter.channel_name;
+
+    if (!logsheet) {
+      return;
+    }
+    logsheet.insertRows(2, 1);
+
+    const date = new Date();
+    const values = [
+      [
+        Utilities.formatDate(date, "JST", "yyyy/MM/dd (E) HH:mm:ss Z"),
+        log,
+        "",
+        "",
+      ],
+    ];
+    logsheet.getRange(2, 1, 1, 4).setValues(values);
+    const sheet = ss.insertSheet(channelName);
+    getAllMessageInChannel(ss, channelID, sheet, getNewSheetURL(ss, sheet));
+    return logReturn("done!");
+  } else {
+    return logReturn("ERR: invaild token");
+  }
+}
+
+function logReturn(log: string) {
+  const response = { text: log };
+  return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(
+    ContentService.MimeType.JSON
+  );
+}
 
 interface SlackFile {
   name: string;
@@ -710,8 +751,8 @@ function downloadData(url: string, fileName: string) {
       itr.next().setTrashed(true);
     }
     var file = folder.createFile(fileBlob);
-    var driveFile = DriveApp.getFileById(file.getId());
-    return driveFile.getUrl();
+    // var driveFile = DriveApp.getFileById(file.getId());
+    return file.getUrl();
   } catch (error) {
     return error.lineNumber + error.message + error.stack;
   }
