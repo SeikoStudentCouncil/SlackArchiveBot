@@ -1,0 +1,25 @@
+name: Create branch by issue
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  create_branch:
+    if: startsWith(github.event.comment.body, '/b ')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set branch name
+        id: set-branch-name
+        shell: bash
+        run: |
+          sep=(${{ github.event.comment.body }})
+          echo "::set-output name=BRANCHNAME::${sep[1]}/#${{ github.event.issue.number }}_$(IFS=_; echo "${sep[*]:2}")"
+      - name: Create branch
+        uses: peterjgrainger/action-create-branch@v2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: '${{ steps.set-branch-name.outputs.BRANCHNAME }}'
