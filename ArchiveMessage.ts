@@ -477,7 +477,7 @@ function backUpContinue() {
 
 function getAllChannels() {
   var res = requestToSlackAPI(CHANNNEL_LIST_BASE_URL, {
-    limit: 100,
+    limit: 300,
     types: "public_channel, private_channel",
   });
   console.log(res);
