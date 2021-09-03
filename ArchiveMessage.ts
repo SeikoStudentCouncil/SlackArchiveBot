@@ -84,11 +84,11 @@ function updateArchives() {
   const ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   const ss_main = ss.getSheetByName("メイン");
   const channelList = getAllChannels();
-  const oldChannelList = new Set(
+  const oldChannelList = new Map(
     ss_main
       .getRange("B2:C")
       .getValues()
-      .filter((v) => v[0]) as unknown as string[]
+      .filter((v) => v[0]) as [string,string][]
   );
   for (const channel of channelList) {
     if (oldChannelList.has(channel.id)) continue;
