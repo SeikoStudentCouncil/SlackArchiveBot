@@ -85,7 +85,7 @@ function updateArchives() {
   const ss_main = ss.getSheetByName("メイン");
   const channelList = getAllChannels();
   const oldChannelList = new Set(
-    ss
+    ss_main
       .getRange("B2:C")
       .getValues()
       .filter((v) => v[0]) as unknown as string[]
