@@ -88,7 +88,7 @@ function updateArchives() {
     ss_main
       .getRange("B2:C")
       .getValues()
-      .filter((v) => v[0]) as [string,string][]
+      .filter((v) => v[0]) as [string, string][]
   );
   for (const channel of channelList) {
     if (oldChannelList.has(channel.id)) continue;
@@ -109,6 +109,29 @@ function updateArchives() {
       UpdateAllReplyInMessage(ss, sheet, channelid);
     }
   }
+}
+
+function getIndexChannelNames(
+  ss_main: GoogleAppsScript.Spreadsheet.Sheet,
+  channelName: string
+) {
+  let l = ss_main
+    .getRange("C:C")
+    .getValues()
+    .filter((v) => v[0]) as unknown[] as string[];
+  let ok = 2,
+    ng = ss_main.getLastRow() + 1;
+  while (Math.abs(ng - ok) > 1) {
+    let h = Math.floor((ok + ng) / 2);
+    if (l[h - 1] <= channelName) {
+      ok = h;
+    } else {
+      ng = h;
+    }
+  }
+  // console.log(ok);
+  ss_main.insertRowBefore(ok + 1);
+  return ok + 1;
 }
 
 function UpdateAllReplyInMessage(
@@ -329,7 +352,7 @@ function createChannelSheet(
   const channelSheetURL = getNewSheetURL(ss, channelSheet);
   const ss_mainURL = getNewSheetURL(ss, ss_main);
   ss_main
-    .getRange(ss_main.getLastRow() + 1, 1, 1, 5)
+    .getRange(getIndexChannelNames(ss_main, channel.name), 1, 1, 5)
     .setValues([
       [
         channel.isPrivate ? "" : "〇",
