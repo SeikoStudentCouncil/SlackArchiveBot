@@ -150,7 +150,7 @@ function UpdateAllReplyInMessage(
     channel: channelID,
     ts: threadSheet.getName(),
     limit: 100,
-    oldest: latest,
+    latest: latest,
   };
   while (hasMore) {
     var res = requestToSlackAPI(REPLY_LIST_BASE_URL, option);
@@ -247,7 +247,7 @@ function UpdateAllReplyInMessage(
   } */
   // var threadSheet = ss.insertSheet(messageTs);
   threadSheet.insertRows(3, messageList.length);
-  threadSheet.getRange(3, 1, 3 + messageList.length, 6).setValues(messageList);
+  threadSheet.getRange(3, 1, messageList.length, 6).setValues(messageList);
   decorateCells(threadSheet);
   cutBlankCells(threadSheet);
   return getNewSheetURL(ss, threadSheet);
@@ -261,7 +261,7 @@ function UpdateMessageInChannel(
 ) {
   const latest: string = channelSheet.getRange("F3").getValue();
   var hasMore = true;
-  var option = { channel: testChannelID, limit: 3000, oldest: latest };
+  var option = { channel: testChannelID, limit: 3000, latest: latest };
   while (hasMore) {
     var res = requestToSlackAPI(CHANNNEL_HISTORY_BASE_URL, option);
     if (!res.ok) return;
@@ -328,8 +328,9 @@ function UpdateMessageInChannel(
         message.ts,
         channelSheetURL
       );
+      channelSheet.insertRowBefore(3);
       channelSheet
-        .getRange(channelSheet.getLastRow() + 1, 1, 1, 7)
+        .getRange(3, 1, 1, 7)
         .setValues([
           [
             usersInfo[user],
