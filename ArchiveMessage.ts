@@ -262,6 +262,7 @@ function UpdateMessageInChannel(
   const latest: string = channelSheet.getRange("F3").getValue();
   var hasMore = true;
   var option = { channel: testChannelID, limit: 3000, latest: latest };
+  const messages: SlackMessage[] = [];
   while (hasMore) {
     var res = requestToSlackAPI(CHANNNEL_HISTORY_BASE_URL, option);
     if (!res.ok) return;
@@ -269,82 +270,82 @@ function UpdateMessageInChannel(
     if (hasMore) {
       option["cursor"] = res.response_metadata.next_cursor;
     }
-    var messages: SlackMessage[] = res.messages;
-    var messageList: string[] = [];
-    for (var message of messages) {
-      console.log(message);
-      var files = message.files;
-      var fileUrls = [];
-      if (!(files === undefined)) {
-        for (var file of files) {
-          if (file.mode == "tombstone" || file.mode == "hidden_by_limit") {
-            continue;
-          }
-          var fileName = `${testChannelID}_${message.ts}_${file.name}`;
-          var url = file.url_private_download;
-          if (url) {
-            fileUrls.push(downloadData(url, fileName));
-          }
+    Array.prototype.push.apply(messages, res.messages);
+  }
+  var messageList: string[] = [];
+  for (const message of messages.reverse()) {
+    console.log(message);
+    var files = message.files;
+    var fileUrls = [];
+    if (!(files === undefined)) {
+      for (var file of files) {
+        if (file.mode == "tombstone" || file.mode == "hidden_by_limit") {
+          continue;
+        }
+        var fileName = `${testChannelID}_${message.ts}_${file.name}`;
+        var url = file.url_private_download;
+        if (url) {
+          fileUrls.push(downloadData(url, fileName));
         }
       }
-      var text = message.text;
-      var user = message.user;
-      var reactions = message.reactions;
-      if (usersInfo[user] == undefined) {
-        var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { user: user });
-        if (userInfo.user == undefined) continue;
-        usersInfo[user] =
+    }
+    var text = message.text;
+    var user = message.user;
+    var reactions = message.reactions;
+    if (usersInfo[user] == undefined) {
+      var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, { user: user });
+      if (userInfo.user == undefined) continue;
+      usersInfo[user] =
+        userInfo.user.profile.display_name == ""
+          ? userInfo.user.real_name
+          : userInfo.user.profile.display_name;
+    }
+    var flag = true;
+    while (flag) {
+      var textPoint = text.search(/<@U.{10}>/);
+      // console.log(textPoint);
+      if (textPoint == -1) {
+        flag = false;
+        continue;
+      }
+      var mentionUser = text.slice(textPoint + 2, textPoint + 13);
+      if (usersInfo[mentionUser] == undefined) {
+        var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, {
+          user: mentionUser,
+        });
+        usersInfo[mentionUser] =
           userInfo.user.profile.display_name == ""
             ? userInfo.user.real_name
             : userInfo.user.profile.display_name;
       }
-      var flag = true;
-      while (flag) {
-        var textPoint = text.search(/<@U.{10}>/);
-        // console.log(textPoint);
-        if (textPoint == -1) {
-          flag = false;
-          continue;
-        }
-        var mentionUser = text.slice(textPoint + 2, textPoint + 13);
-        if (usersInfo[mentionUser] == undefined) {
-          var userInfo = requestToSlackAPI(USER_INFO_BASE_URL, {
-            user: mentionUser,
-          });
-          usersInfo[mentionUser] =
-            userInfo.user.profile.display_name == ""
-              ? userInfo.user.real_name
-              : userInfo.user.profile.display_name;
-        }
-        text =
-          text.slice(0, textPoint) +
-          `@${usersInfo[mentionUser]}` +
-          text.slice(textPoint + 14);
-      }
-      messageList.push(`【${usersInfo[user]}】\n${text}`);
-      var threadURL = getAllReplyInMessage(
-        ss,
-        testChannelID,
-        message.ts,
-        channelSheetURL
-      );
-      channelSheet.insertRowBefore(3);
-      channelSheet
-        .getRange(3, 1, 1, 7)
-        .setValues([
-          [
-            usersInfo[user],
-            text,
-            threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "",
-            fileUrls.join(", "),
-            reactions != undefined
-              ? `{ "reactions": ${JSON.stringify(reactions)} }`
-              : "",
-            message.ts,
-            user,
-          ],
-        ]);
+      text =
+        text.slice(0, textPoint) +
+        `@${usersInfo[mentionUser]}` +
+        text.slice(textPoint + 14);
     }
+    messageList.push(`【${usersInfo[user]}】\n${text}`);
+    var threadURL = getAllReplyInMessage(
+      ss,
+      testChannelID,
+      message.ts,
+      channelSheetURL
+    );
+    channelSheet.insertRowBefore(3);
+    channelSheet
+      .getRange(3, 1, 1, 7)
+      .setValues([
+        [
+          usersInfo[user],
+          text,
+          threadURL != "" ? `=HYPERLINK("${threadURL}", "リンク＞")` : "",
+          fileUrls.join(", "),
+          reactions != undefined
+            ? `{ "reactions": ${JSON.stringify(reactions)} }`
+            : "",
+          message.ts,
+          user,
+        ],
+      ]);
   }
 }
 
