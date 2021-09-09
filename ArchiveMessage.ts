@@ -261,7 +261,7 @@ function UpdateMessageInChannel(
 ) {
   const latest: string = channelSheet.getRange("F3").getValue();
   var hasMore = true;
-  var option = { channel: testChannelID, limit: 3000, oldest: latest };
+  var option = { channel: testChannelID, limit: 3000, oldest: latest+0.1 };
   const messages: SlackMessage[] = [];
   while (hasMore) {
     var res = requestToSlackAPI(CHANNNEL_HISTORY_BASE_URL, option);
