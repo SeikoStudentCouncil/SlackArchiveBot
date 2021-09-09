@@ -80,7 +80,7 @@ interface SlackChannel {
 
 var usersInfo = {};
 
-function updateArchives() {
+function updateArchives1() {
   const ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   const ss_main = ss.getSheetByName("メイン");
   const channelList = getAllChannels();
@@ -94,6 +94,10 @@ function updateArchives() {
     if (oldChannelList.has(channel.id)) continue;
     createChannelSheet(ss, ss_main, channel);
   }
+}
+
+function updateArchives2() {
+  const ss = SpreadsheetApp.openById(BACKUP_SHEET_ID);
   const sheets = ss.getSheets();
   for (const sheet of sheets) {
     const [identifier, channelid] = sheet.getRange("A1:B1").getValues()[0] as [
