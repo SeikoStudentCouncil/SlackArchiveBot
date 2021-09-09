@@ -110,6 +110,7 @@ function updateArchives2() {
     }
     if (identifier === "＜親チャンネルへ") {
       // if thread
+      continue;
       UpdateAllReplyInMessage(ss, sheet, channelid);
     }
   }
