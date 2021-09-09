@@ -110,6 +110,7 @@ function updateArchives2() {
     }
     if (identifier === "＜親チャンネルへ") {
       // if thread
+      continue;
       UpdateAllReplyInMessage(ss, sheet, channelid);
     }
   }
@@ -150,7 +151,7 @@ function UpdateAllReplyInMessage(
     channel: channelID,
     ts: threadSheet.getName(),
     limit: 100,
-    latest: latest,
+    oldest: latest,
   };
   while (hasMore) {
     var res = requestToSlackAPI(REPLY_LIST_BASE_URL, option);
@@ -261,7 +262,7 @@ function UpdateMessageInChannel(
 ) {
   const latest: string = channelSheet.getRange("F3").getValue();
   var hasMore = true;
-  var option = { channel: testChannelID, limit: 3000, latest: latest };
+  var option = { channel: testChannelID, limit: 3000, oldest: latest+0.1 };
   const messages: SlackMessage[] = [];
   while (hasMore) {
     var res = requestToSlackAPI(CHANNNEL_HISTORY_BASE_URL, option);
